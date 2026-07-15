@@ -1,0 +1,30 @@
+diff --git a/.gitignore b/.gitignore
+index afa0967..33dc8e9 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -3,3 +3,4 @@
+ !.gitignore
+ !PKGBUILD
+ !/.nvchecker.toml
++!fix_mpvqt.patch
+diff --git a/PKGBUILD b/PKGBUILD
+index ef3e152..275557e 100644
+--- a/PKGBUILD
++++ b/PKGBUILD
+@@ -9,11 +9,14 @@ license=('GPL')
+ url='https://github.com/jellyfin/jellyfin-desktop'
+ depends=('mpv' 'mpvqt' 'libcec' 'sdl2' 'p8-platform' 'protobuf' 'qt6-webengine' 'qt6-declarative')
+ makedepends=('cmake' 'git' 'ninja' 'python')
+-source=("https://github.com/jellyfin-archive/jellyfin-desktop-qt/archive/refs/tags/v${pkgver}.tar.gz")
+-sha256sums=('11ba0a7f4f344dc076b9f234193f93684a5621a100607298dfc2d14092b525d5')
++source=("https://github.com/jellyfin-archive/jellyfin-desktop-qt/archive/refs/tags/v${pkgver}.tar.gz"
++        "fix_mpvqt.patch")
++sha256sums=('11ba0a7f4f344dc076b9f234193f93684a5621a100607298dfc2d14092b525d5'
++            'c9f7db5e4e1ff59b16306fe33ec18a6bbb21bf9a8a346672dcff22093ada48c2')
+ 
+ build() {
+     cd "${srcdir}/jellyfin-desktop-qt-${pkgver}"
++    patch -Np1 -i ../fix_mpvqt.patch
+     rm -rf build
+     mkdir build
+     cmake \
