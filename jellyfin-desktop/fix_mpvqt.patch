@@ -1,0 +1,43 @@
+diff --git a/src/player/PlayerComponent.cpp b/src/player/PlayerComponent.cpp
+index b53e684..403c38c 100644
+--- a/src/player/PlayerComponent.cpp
++++ b/src/player/PlayerComponent.cpp
+@@ -313,15 +313,15 @@ void PlayerComponent::queueMedia(const QString& url, const QVariantMap& options,
+   QUrl qurl = url;
+   QString host = qurl.host();
+ 
+-  QVariantList command;
++  QStringList command;
+   command << "loadfile" << qurl.toString(QUrl::FullyEncoded);
+   command << "append-play"; // if nothing is playing, play it now, otherwise just enqueue it
+ 
+ #if MPV_CLIENT_API_VERSION >= MPV_MAKE_VERSION(2, 3)
+-  command << -1; // insert_at_idx
++  command << QString::number(-1); // insert_at_idx
+ #endif
+ 
+-  QVariantMap extraArgs;
++  QMap<QString, QString> extraArgs;
+ 
+   quint64 startMilliseconds = options["startMilliseconds"].toLongLong();
+   if (startMilliseconds != 0)
+@@ -347,7 +347,9 @@ void PlayerComponent::queueMedia(const QString& url, const QVariantMap& options,
+   extraArgs.insert("ad", "");
+   extraArgs.insert("vd", "");
+ 
+-  command << extraArgs;
++  for(const auto& key: extraArgs.keys()) {
++    command << key << extraArgs[key];
++  }
+ 
+   m_mpv->command( command);
+ 
+@@ -851,7 +853,7 @@ void PlayerComponent::seekTo(qint64 ms)
+     return;
+   }
+   double timeSecs = ms / 1000.0;
+-  QVariantList args = (QVariantList() << "seek" << timeSecs << "absolute+exact");
++  QStringList args = (QStringList() << "seek" << QString::number(timeSecs) << "absolute+exact");
+   m_mpv->command( args);
+ }
+ 
