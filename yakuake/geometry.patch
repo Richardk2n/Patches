@@ -1,0 +1,106 @@
+diff --git a/app/mainwindow.cpp b/app/mainwindow.cpp
+index 3708874e4dfad152c829592380e6c25315b70897..4a256c350b64eb946444c86c446883551a86887d 100644
+--- a/app/mainwindow.cpp
++++ b/app/mainwindow.cpp
+@@ -125,6 +125,8 @@ MainWindow::MainWindow(QWidget *parent)
+     }
+ 
+     connect(m_outputOrderWatcher, &OutputOrderWatcher::outputOrderChanged, this, &MainWindow::updateScreenMenu);
++    connect(m_outputOrderWatcher, &OutputOrderWatcher::outputOrderChanged, this, &MainWindow::updateAvailableScreenRects);
++    updateAvailableScreenRects();
+ 
+     applySettings();
+ 
+@@ -771,6 +773,37 @@ void MainWindow::updateScreenMenu()
+     action->setVisible(m_outputOrderWatcher->outputOrder().count() > 1);
+ }
+ 
++void MainWindow::updateAvailableScreenRects()
++{
++    if (!m_isWayland)
++        return;
++
++    auto getRect = [=, this](const QString &screenName) {
++        auto message = QDBusMessage::createMethodCall(QStringLiteral("org.kde.plasmashell"),
++                                                      QStringLiteral("/StrutManager"),
++                                                      QStringLiteral("org.kde.PlasmaShell.StrutManager"),
++                                                      QStringLiteral("availableScreenRect"));
++        message.setArguments({screenName});
++        QDBusPendingCall call = QDBusConnection::sessionBus().asyncCall(message);
++        QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(call, this);
++
++        QObject::connect(watcher, &QDBusPendingCallWatcher::finished, this, [=, this]() {
++            QDBusPendingReply<QRect> reply = *watcher;
++            m_availableScreenRects[screenName] = reply.isValid() ? reply.value() : QRect();
++            watcher->deleteLater();
++        });
++    };
++    for (const auto &key : m_availableScreenRects.keys()) {
++        if (!m_outputOrderWatcher->outputOrder().contains(key)) {
++            m_availableScreenRects.remove(key);
++        }
++    }
++
++    for (const auto &screen : m_outputOrderWatcher->outputOrder()) {
++        getRect(screen);
++    }
++}
++
+ QScreen *MainWindow::findScreenByName(const QString &screenName)
+ {
+     const auto screens = QGuiApplication::screens();
+@@ -1236,23 +1269,12 @@ bool MainWindow::focusNextPrevChild(bool)
+ void MainWindow::toggleWindowState()
+ {
+     if (m_isWayland) {
+-        auto message = QDBusMessage::createMethodCall(QStringLiteral("org.kde.plasmashell"),
+-                                                      QStringLiteral("/StrutManager"),
+-                                                      QStringLiteral("org.kde.PlasmaShell.StrutManager"),
+-                                                      QStringLiteral("availableScreenRect"));
+         const QString screenName = m_outputOrderWatcher->outputOrder().at(getScreen());
+-        message.setArguments({screenName});
+-        QDBusPendingCall call = QDBusConnection::sessionBus().asyncCall(message);
+-        QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(call, this);
+-
+-        QObject::connect(watcher, &QDBusPendingCallWatcher::finished, this, [=, this]() {
+-            QDBusPendingReply<QRect> reply = *watcher;
+-            m_availableScreenRect = reply.isValid() ? reply.value() : QRect();
+-            setWindowGeometry(Settings::width(), Settings::height(), Settings::position());
+-            watcher->deleteLater();
+-        });
++        m_availableScreenRect = m_availableScreenRects[screenName];
+ 
+         _toggleWindowState();
++
++        updateAvailableScreenRects();
+     } else {
+         _toggleWindowState();
+     }
+diff --git a/app/mainwindow.h b/app/mainwindow.h
+index 7b6c99d4fc45a5adf23ac9802d39055a3977f00e..8ac54b2467c20aeb9fb90f33acc5f6c10889aec1 100644
+--- a/app/mainwindow.h
++++ b/app/mainwindow.h
+@@ -12,6 +12,7 @@
+ 
+ #include <KMainWindow>
+ 
++#include <QMap>
+ #include <QTimer>
+ 
+ #include "outputorderwatcher.h"
+@@ -107,6 +108,7 @@ private Q_SLOTS:
+ 
+     void updateScreenMenu();
+     void setScreen(QAction *action);
++    void updateAvailableScreenRects();
+ 
+     void setWindowWidth(int width);
+     void setWindowHeight(int height);
+@@ -169,6 +171,7 @@ private:
+ 
+     void updateMask();
+ 
++    QMap<QString, QRect> m_availableScreenRects;
+     int getScreen();
+     QRect getScreenGeometry();
+     QRect getDesktopGeometry();

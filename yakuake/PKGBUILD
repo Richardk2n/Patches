@@ -1,0 +1,71 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Maintainer: Antonio Rojas <arojas@archlinux.org>
+# Contributor: Andrea Scarpino <andrea@archlinux.org>
+# Contributor: James Rayner <iphitus@gmail.com>
+# Contributor: leeghoofd <abcdefg@solcon.nl>
+
+pkgname=yakuake
+pkgver=26.04.3
+pkgrel=1
+pkgdesc='A drop-down terminal emulator based on KDE konsole technology'
+arch=(x86_64)
+url='https://apps.kde.org/yakuake/'
+license=(GPL-2.0-or-later)
+depends=(glibc
+         karchive
+         kcolorscheme
+         kconfig
+         kconfigwidgets
+         kcoreaddons
+         kcrash
+         kdbusaddons
+         kglobalaccel
+         ki18n
+         kiconthemes
+         kio
+         knewstuff
+         knotifications
+         knotifyconfig
+         konsole
+         kparts
+         kstatusnotifieritem
+         kwayland
+         kwidgetsaddons
+         kwindowsystem
+         kxmlgui
+         libstdc++
+         libx11
+         libxcb
+         qt6-base
+         wayland)
+makedepends=(extra-cmake-modules
+             plasma-wayland-protocols)
+groups=(kde-applications
+        kde-utilities)
+source=(https://download.kde.org/stable/release-service/$pkgver/src/$pkgname-$pkgver.tar.xz{,.sig}
+        geometry.patch
+        cleanup.patch
+        names.patch)
+sha256sums=('ed5676a65ed99e57b7bfd73fbd31f93e7f5a8d4dc54551d3c2a6668f78b5b5b2'
+            'SKIP'
+            '8ca673801b9def6b77d4c11df52894512cfd3289cd069c88b70b4deeee4a6201'
+            '540851c603b861ebbde4078eea5b9aae4da9ea35ff7ad235d9820e4c1c029a58'
+            '546c957623fa761309f41b0f7847620897c09f25c2a037175ba0da72fec99441')
+validpgpkeys=(CA262C6C83DE4D2FB28A332A3A6A4DB839EAA6D7  # Albert Astals Cid <aacid@kde.org>
+              F23275E4BF10AFC1DF6914A6DBD2CE893E2D1C87  # Christoph Feck <cfeck@kde.org>
+              D81C0CB38EB725EF6691C385BB463350D6EF31EF) # Heiko Becker <heiko.becker@kde.org>
+
+build() {
+  cd $pkgname-$pkgver
+  patch -Np1 -i ../geometry.patch
+  patch -Np1 -i ../cleanup.patch
+  patch -Np1 -i ../names.patch
+  cd ..
+  cmake -B build -S $pkgname-$pkgver \
+    -DBUILD_TESTING=OFF
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+}

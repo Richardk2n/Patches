@@ -1,0 +1,47 @@
+diff --git a/app/mainwindow.cpp b/app/mainwindow.cpp
+index 3708874e4dfad152c829592380e6c25315b70897..8dbf9039db0d9f2c8f23583d22e8cfc7148f9f6a 100644
+--- a/app/mainwindow.cpp
++++ b/app/mainwindow.cpp
+@@ -1565,24 +1565,26 @@ void MainWindow::setKeepOpen(bool keepOpen)
+ int MainWindow::getScreen()
+ {
+     if (Settings::screen() <= 0 || Settings::screen() > m_outputOrderWatcher->outputOrder().length()) {
+-        auto message = QDBusMessage::createMethodCall(QStringLiteral("org.kde.KWin"),
+-                                                      QStringLiteral("/KWin"),
+-                                                      QStringLiteral("org.kde.KWin"),
+-                                                      QStringLiteral("activeOutputName"));
+-        QDBusReply<QString> reply = QDBusConnection::sessionBus().call(message);
+-
+-        if (reply.isValid()) {
+-            const auto screens = m_outputOrderWatcher->outputOrder();
+-            for (int i = 0; i < screens.size(); ++i) {
+-                if (screens[i] == reply.value())
+-                    return i;
++        if (m_isWayland) {
++            // Note: The active screen may not be the one containing the mouse if a window was activated using a keybind
++            auto message = QDBusMessage::createMethodCall(QStringLiteral("org.kde.KWin"),
++                                                          QStringLiteral("/KWin"),
++                                                          QStringLiteral("org.kde.KWin"),
++                                                          QStringLiteral("activeOutputName"));
++            QDBusReply<QString> reply = QDBusConnection::sessionBus().call(message);
++
++            if (reply.isValid()) {
++                const int screen = m_outputOrderWatcher->outputOrder().indexOf(reply.value());
++                return screen != -1 ? screen : 0;
+             }
++            return 0; // Default to first screen
++        } else {
++            // Right after unplugging an external monitor and the Yakuake window was on
++            // that monitor, QGuiApplication::screenAt() can return nullptr so we fallback on
++            // the first monitor.
++            QScreen *screen = QGuiApplication::screenAt(QCursor::pos());
++            return screen ? m_outputOrderWatcher->outputOrder().indexOf(screen->name()) : 0;
+         }
+-        // Right after unplugging an external monitor and the Yakuake window was on
+-        // that monitor, QGuiApplication::screenAt() can return nullptr so we fallback on
+-        // the first monitor.
+-        QScreen *screen = QGuiApplication::screenAt(QCursor::pos());
+-        return screen ? m_outputOrderWatcher->outputOrder().indexOf(screen->name()) : 0;
+     } else {
+         return Settings::screen() - 1;
+     }
