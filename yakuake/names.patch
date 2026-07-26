@@ -1,5 +1,5 @@
 diff --git a/app/config/windowsettings.cpp b/app/config/windowsettings.cpp
-index 6e8a68f0479b5ce7599756b5088e4540a32372cf..70a94dc6288b8823e81c2f5ae1b7ca0f967e7d9b 100644
+index 6e8a68f0479b5ce7599756b5088e4540a32372cf..4a87a522706c79b8d8ba0d67173bc34c22424c27 100644
 --- a/app/config/windowsettings.cpp
 +++ b/app/config/windowsettings.cpp
 @@ -10,15 +10,15 @@
@@ -15,7 +15,7 @@ index 6e8a68f0479b5ce7599756b5088e4540a32372cf..70a94dc6288b8823e81c2f5ae1b7ca0f
 -    for (int i = 2; i <= QGuiApplication::screens().count(); i++)
 -        kcfg_Screen->insertItem(i, xi18nc("@item:inlistbox", "Screen %1", i));
 +    for (int i = 1; i <= outputOrder.count(); i++)
-+        kcfg_Screen->insertItem(i, xi18nc("@item:inlistbox", "Screen %1", i) + QString::fromStdString(" (%1)").arg(outputOrder[i - 1]));
++        kcfg_Screen->insertItem(i, xi18nc("@item:inlistbox", "Screen %1", i) + QStringLiteral(" (%1)").arg(outputOrder[i - 1]));
  
 -    if (QGuiApplication::screens().count() > 1) {
 +    if (outputOrder.count() > 1) {
@@ -52,20 +52,19 @@ index 58470a3163c11d7217c90475dcf9268541c97884..0adf6776275c217eebe54edbe554823b
          </item>
          <item>
 diff --git a/app/mainwindow.cpp b/app/mainwindow.cpp
-index 3708874e4dfad152c829592380e6c25315b70897..1d7a57127b9770499fdafd105d0e2163c0326126 100644
+index 3708874e4dfad152c829592380e6c25315b70897..e1ebc8120bb11a9ab5246ab10de630fcebf28c33 100644
 --- a/app/mainwindow.cpp
 +++ b/app/mainwindow.cpp
-@@ -761,7 +761,8 @@ void MainWindow::updateScreenMenu()
+@@ -761,7 +761,7 @@ void MainWindow::updateScreenMenu()
      action->setChecked(Settings::screen() == 0);
  
      for (int i = 1; i <= m_outputOrderWatcher->outputOrder().count(); i++) {
 -        action = m_screenMenu->addAction(xi18nc("@item:inmenu", "Screen %1", i));
-+        action =
-+            m_screenMenu->addAction(xi18nc("@item:inmenu", "Screen %1", i) + QString::fromStdString(" (%1)").arg(m_outputOrderWatcher->outputOrder()[i - 1]));
++        action = m_screenMenu->addAction(xi18nc("@item:inmenu", "Screen %1", i) + QStringLiteral(" (%1)").arg(m_outputOrderWatcher->outputOrder()[i - 1]));
          action->setCheckable(true);
          action->setData(i);
          action->setChecked(i == Settings::screen());
-@@ -883,7 +884,7 @@ void MainWindow::configureApp()
+@@ -883,7 +883,7 @@ void MainWindow::configureApp()
      settingsDialog->setFaceType(KPageDialog::List);
      connect(settingsDialog, &KConfigDialog::settingsChanged, this, &MainWindow::applySettings);
  

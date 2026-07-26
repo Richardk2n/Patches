@@ -16,7 +16,7 @@ index e37d5e4..cbfb48b 100644
 +            'SKIP'
 +            '8ca673801b9def6b77d4c11df52894512cfd3289cd069c88b70b4deeee4a6201'
 +            '540851c603b861ebbde4078eea5b9aae4da9ea35ff7ad235d9820e4c1c029a58'
-+            '546c957623fa761309f41b0f7847620897c09f25c2a037175ba0da72fec99441')
++            'c6c99ceca8ba880578b5e1d742caa96dfc9339a4c5c7b1c17165a8067a803875')
  validpgpkeys=(CA262C6C83DE4D2FB28A332A3A6A4DB839EAA6D7  # Albert Astals Cid <aacid@kde.org>
                F23275E4BF10AFC1DF6914A6DBD2CE893E2D1C87  # Christoph Feck <cfeck@kde.org>
                D81C0CB38EB725EF6691C385BB463350D6EF31EF) # Heiko Becker <heiko.becker@kde.org>
