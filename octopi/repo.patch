@@ -1,6 +1,6 @@
 diff --git a/PKGBUILD b/PKGBUILD
 index 4f34d47..36b3404 100644
---- a/PKGBUILDold
+--- a/PKGBUILD
 +++ b/PKGBUILD
 @@ -36,11 +36,14 @@ makedepends=(
    'git'
