@@ -1,0 +1,52 @@
+diff --git a/src/mainwindow.cpp b/src/mainwindow.cpp
+index 1b37702b..97ac896d 100644
+--- a/src/mainwindow.cpp
++++ b/src/mainwindow.cpp
+@@ -1530,6 +1530,10 @@ void MainWindow::onAURShowPKGBUILDDiff()
+       QModelIndex item = selectedRows.at(0);
+       const PackageRepository::PackageData*const package = m_packageModel->getData(item);
+       QString pkglogSite(QStringLiteral("https://aur.archlinux.org/cgit/aur.git/log/PKGBUILD?h=%1"));
++
++      PackageInfoData data = Package::getInformation(package->name, true);
++      QDateTime iDate = data.installDate;
++
+       //QString latestVersion, previousVersion;
+ 
+       //Let's download LOG html page and find the two newest version commit hashes
+@@ -1550,7 +1554,8 @@ void MainWindow::onAURShowPKGBUILDDiff()
+       p.waitForFinished(-1);
+ 
+       QString res = QString::fromLatin1(p.readAll());
+-      QRegularExpression re(QStringLiteral(";id=(?<commit>[a-f0-9]+)"));
++      QString exp = QString(QStringLiteral("title='(?<date>[0-9-:+ ]{25})'>.+</span></td><td><a href='/cgit/aur\\.git/commit/PKGBUILD\\?h=%1&amp;id=(?<commit>[a-f0-9]+)")).arg(pkgBase);
++      QRegularExpression re(exp);
+       //qDebug() << res;
+       QRegularExpressionMatchIterator i = re.globalMatch(res);
+       QStringList commits;
+@@ -1563,11 +1568,15 @@ void MainWindow::onAURShowPKGBUILDDiff()
+         {
+           commits << match.captured(QStringLiteral("commit"));
+ 
+-          if (commits.count() == 2) break;
++          QString date = match.captured(QStringLiteral("date"));
++          QDateTime diffDate = QDateTime::fromString(date, QStringLiteral("yyyy-MM-dd HH:mm:ss tt"));
++
++          if (diffDate < iDate) break;
++
+         }
+       }
+ 
+-      if (commits.count() != 2)
++      if (commits.count() < 2)
+       {
+         delete cic;
+         QMessageBox::information(this, StrConstants::getApplicationName(),
+@@ -1590,7 +1599,7 @@ void MainWindow::onAURShowPKGBUILDDiff()
+       p.waitForFinished(-1);
+ 
+       params.clear();
+-      params << pkgCommit.arg(commits.at(1));
++      params << pkgCommit.arg(commits.last());
+       params << QStringLiteral("-o");
+       params << QDir::tempPath() + QDir::separator() + tempPkgPrevious;
+       p.start(QStringLiteral("/usr/bin/curl"), params);
